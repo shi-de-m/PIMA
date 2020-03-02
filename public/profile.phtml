@@ -1,0 +1,147 @@
+<?php
+ 	require( "../inc/inc.default.php" );
+  	require("../inc/inc.class.instagram.php");
+    entete( "Accueil" );
+?>
+<!DOCTYPE html>
+<html lang="en">
+<title>W3.CSS Template</title>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<link rel="stylesheet" href="https://www.w3schools.com/w3css/4/w3.css">
+<link rel="stylesheet" href="https://fonts.googleapis.com/css?family=Lato">
+<link rel="stylesheet" href="https://fonts.googleapis.com/css?family=Montserrat">
+<link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/4.7.0/css/font-awesome.min.css">
+<script src="https://ajax.googleapis.com/ajax/libs/jquery/3.4.1/jquery.min.js"></script> 
+
+<style>
+	body,h1,h2,h3,h4,h5,h6 {font-family: "Lato", sans-serif}
+	.w3-bar,h1,button {font-family: "Montserrat", sans-serif}
+	.fa-anchor,.fa-coffee {font-size:200px}	
+    .posts{
+                display: -webkit-box;
+                display: -webkit-flex;
+                display: -ms-flexbox;
+                display: flex;
+                flex-wrap: wrap;
+    }
+    h1{
+            color : #7c795d;
+            font-family: 'Trocchi', serif;
+            font-size: 45px;
+            font-weight: normal;
+            line-height: 48px;
+            margin : 0;
+            text-align: center
+    }
+    .img{
+       width : 30%; 
+       margin: 15px;
+       border: 2px outset black;
+    }
+    .posts{
+        display: flex;
+    }
+    table {
+        border: medium solid #6495ed;
+        border-collapse: collapse;
+        width: 50%;
+        margin-left: auto;
+        margin-right: auto; 
+    }
+    img{
+        display: block;
+        margin-left: auto;
+        margin-right: auto; 
+    }
+    th {
+        font-family: monospace;
+        border: thin solid #6495ed;
+        width: 50%;
+        padding: 5px;
+        background-color: #D0E3FA;
+    }
+    td {
+        font-family: sans-serif;
+        border: thin solid #6495ed;
+        width: 50%;
+        padding: 5px;
+        text-align: center;
+        background-color: #ffffff;
+    }
+</style>
+ 
+<body>
+    <?php
+        //connexion a la bdd
+        //$bd = new PDO('mysql:host=localhost; dbname=instan', 'hicham', 'hicham'); 
+
+        $bd = new PDO('mysql:host=localhost; dbname=instan', 'root', '');
+    
+        //préparation des requetes 
+        $requete_influenceur = $bd->prepare("SELECT * FROM influenceurs WHERE id = :id");
+        $requete_compte = $bd->prepare("SELECT id_influenceur, nom_compte, lien FROM comptes_influenceurs WHERE id_influenceur = :id_influenceur AND type_compte = :type_compte");
+    ?>
+    
+    
+    <?php
+        menu();
+    ?>
+
+    <div class="w3-row-padding w3-padding-64 w3-container">
+    <?php
+        $requete_influenceur->execute(array('id' => $_POST['id']));
+        while(($data = $requete_influenceur->fetch(PDO::FETCH_ASSOC))){
+            //echo '<br />'; print_r($data); echo '<br /><br />';
+            
+            //récuperation info insta
+            $requete_compte->execute(array('id_influenceur' => $data['id'], 'type_compte' => "instagram"));
+	        $result_insta = $requete_compte->fetch(PDO::FETCH_ASSOC);
+            //echo '<br />'; print_r($result_insta); echo '<br /><br />';
+            
+            //récuperation info youtube
+            $requete_compte->execute(array('id_influenceur' => $data['id'], 'type_compte' => "youtube"));
+            $result_youtube = $requete_compte->fetch(PDO::FETCH_ASSOC);
+            //echo '<br />'; print_r($result_youtube); echo '<br /><br />';
+            $nom_compte_instagram = $result_insta['nom_compte'];
+            $id_influenceur = $result_insta['id_influenceur'];
+            
+            $compte_instagram = new Instagram($nom_compte_instagram);
+
+        }
+    ?>
+
+    <div>
+        <h1><?= $compte_instagram->get_name()?></h1>
+        <img src="<?= $compte_instagram->get_profile_picture() ?>"/>
+        <table>
+            <thead>
+                <tr>
+                    <td>Bio</td>
+                    <td>Followers</td>
+                    <td>Following</td>
+                </tr>
+            </thead>
+            <tbody>
+                <tr>
+                    <td><?= $compte_instagram->get_bio() ?></td>
+                    <td><?= $compte_instagram->number_followers()?></td>
+                    <td><?= $compte_instagram->number_following()?></td>
+                </tr>
+            </tbody>
+        </table>
+        
+
+        <div>
+            <h2>Latest Instagram posts :</h2>
+            <?= $compte_instagram->show_posts()?>
+        </div>
+    </div>
+    </div>
+    
+    <?php
+        pied();
+    ?>
+</body>
+
+</html>
